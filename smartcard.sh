@@ -1,11 +1,26 @@
 #!/usr/bin/env bash
 
+DATABASE="./smartcard.db";
+VERSION="v0.0.1";
+
+__LoadAndCheckCard(){
+	echo "Reading card...";
+
+	if [ ! -f $DATABASE ]; then
+		echo "Database does not exist, create? Y/n";
+		read
+	else
+		echo "Loading database...";
+		echo "Checking if card exists in database...";
+	fi
+
+
+}
 
 __RegisterCard(){
 
-	echo "Reading card...";
-	echo "Loading database...";
-	echo "Checking if card exists in database...";
+	__LoadAndCheckCard
+
 	# if($exists){
 		echo "Card already registered...";
 	# }else{
@@ -17,15 +32,16 @@ __RegisterCard(){
 }
 
 __UnregisterCard(){
-	echo "Reading card...";
-	echo "Loading database...";
-	echo "Checking card in database...";
+
+	__LoadAndCheckCard
+
 	# if(exists){
 		echo "Unregistering card...";
-		echo "Card's unregistered...";
+		echo "Card's unregistered.";
 	# }else{
-		echo "Card's not registered";
+		echo "Card was not registered beforehand.";
 	# }
+
 }
 
 __Menu(){
@@ -64,6 +80,7 @@ __Menu(){
 
 
 __Main(){
+	echo "+======== SMARTCARD MANAGER $VERSION ========+";
 	__Menu
 }
 
