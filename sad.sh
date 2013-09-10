@@ -2,11 +2,34 @@
 
 DATABASE="sad.db";
 VERSION="v0.0.1";
+SADSCRIPTFILENAME="sadtmp.sh";
+SADSCRIPT="/var/tmp/$SADSCRIPTFILENAME"
+SADSCRIPTLOGFILE="/var/tmp/$SADSCRIPTFILENAME.log";
+PIDFILE="/var/tmp/$SADSCRIPTFILENAME.pid";
+
+SADSCRIPTCODE=$'
+	#!/usr/bin/env bash
+	
+	echo $$ > $1
+
+	while [ 1 ]
+	do
+		readFromCard=`opensc-tool -w -a &> '$SADSCRIPTLOGFILE' && pkcs15-tool -D 2> '$SADSCRIPTLOGFILE' | md5`;
+		resultFromDB=`grep $readFromCard '$DATABASE'`;
+
+		if [ -z "$resultFromDB" ]; then
+			echo "[X] DO NOT OPEN DOOR FOR [ $readFromCard ] at [ `date` ]" >> '$SADSCRIPTLOGFILE'
+		else
+			echo "[O] OPEN DOOR TO [ $readFromCard ] at [ `date` ]" >> '$SADSCRIPTLOGFILE'
+		fi
+	done
+';
+
 
 # 'XXX'
 __ReadCardFromReader(){
 	
-	readFromCard=`opensc-tool -w -a > /dev/null 2>&1 && pkcs15-tool -D | md5`;
+	readFromCard=`opensc-tool -w -a &> $SADSCRIPTLOGFILE 2>&1 && pkcs15-tool -D 2> $SADSCRIPTLOGFILE | md5`;
 	echo "$readFromCard";
 
 }
@@ -60,7 +83,33 @@ __UnregisterCard(){
 }
 
 __RunSAD(){
-	echo
+	if [ ! -f $DATABASE ]; then
+		echo "Unable to start service: Database is missing."
+	else
+
+		if [ -e $PIDFILE ]; then
+			echo "Another instance (`cat $PIDFILE`) still running?"
+			echo "If you are sure that no other instance is running, delete the lockfile"
+			echo "'${PIDFILE}' and re-start this script."
+			echo "Aborting now..."
+		else
+			# Create our new lockfile:
+			echo $$ > $PIDFILE
+
+			echo "$SADSCRIPTCODE" > $SADSCRIPT;
+			run="bash $SADSCRIPT $PIDFILE";
+			$run &
+			echo "Running pid [ $! ]";
+		fi
+	fi
+}
+
+__StopSAD(){
+	if [ -f $PIDFILE ]; then
+		kill -3 `cat $PIDFILE`;
+		rm $PIDFILE;
+		echo "Service stoped.";
+	fi
 }
 
 __ExitSAD(){
@@ -84,25 +133,33 @@ __Menu(){
 	        1)
 				echo "	Register Card";
 	            __RegisterCard
-	            read
+	            # echo "Hit ENTER to proceed...";
+	            # read
 	            ;;
 	        2)
 	            echo "	Unregister Card";
 	            __UnregisterCard
-	            read
+	            # echo "Hit ENTER to proceed...";
+	            # read
 	            ;;
 	        3)
 	            echo "	Run Service"
 	            __RunSAD
+	            # echo "Hit ENTER to proceed...";
+	            # read
 	            ;;
 	        4)
 	            echo "	Stop Service"
+	            __StopSAD
+
 	            ;;
 	        5)
 	            echo "	Exit";
 	            __ExitSAD
 	            ;;
 	    esac
+	    echo -n "Hit ENTER to proceed...";
+	    read
 	done;
 }
 
@@ -122,21 +179,3 @@ __Main(){
 __Main
 exit
 
-
-
-
-
-# Run service
-# PIDFILE=/var/tmp/$(basename $0).pid
-
-# # Check for existing lockfile:
-# if [ -e $PIDFILE ]; then
-#   echo "Another instance (`cat $PIDFILE`) still running?"
-#   echo "If you are sure that no other instance is running, delete the lockfile"
-#   echo "'${PIDFILE}' and re-start this script."
-#   echo "Aborting now..."
-#   exit 1
-# else
-#   # Create our new lockfile:
-#   echo $$ > $PIDFILE
-# fi
