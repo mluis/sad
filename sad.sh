@@ -36,7 +36,7 @@ __ReadCardFromReader(){
 
 __RegisterCard(){
 
-	echo "[+] Reading from card...";
+	echo "[+] Trying to read from card...";
 	local cardId="$(__ReadCardFromReader)";
 
 	if [ ! -f $DATABASE ]; then
@@ -90,7 +90,7 @@ __RunSAD(){
 		if [ -e $PIDFILE ]; then
 			echo "Another instance (`cat $PIDFILE`) still running?"
 			echo "If you are sure that no other instance is running, delete the lockfile"
-			echo "'${PIDFILE}' and re-start this script."
+			echo "'${PIDFILE}' and try again."
 			echo "Aborting now..."
 		else
 			# Create our new lockfile:
@@ -117,7 +117,7 @@ __ExitSAD(){
 }
 
 __Menu(){
-	cmd=(dialog --keep-tite --menu "Select an option:" 13 22 22)
+	cmd=(dialog --keep-tite --menu "Select an option:" 12 26 22)
 
 	options=(1 "Register Card"
 	         2 "Unregister Card"
@@ -133,33 +133,33 @@ __Menu(){
 	        1)
 				echo "	Register Card";
 	            __RegisterCard
-	            # echo "Hit ENTER to proceed...";
-	            # read
+	            echo "Hit ENTER to proceed...";
+	            read
 	            ;;
 	        2)
 	            echo "	Unregister Card";
 	            __UnregisterCard
-	            # echo "Hit ENTER to proceed...";
-	            # read
+	            echo "Hit ENTER to proceed...";
+	            read
 	            ;;
 	        3)
 	            echo "	Run Service"
 	            __RunSAD
-	            # echo "Hit ENTER to proceed...";
-	            # read
+	            echo "Hit ENTER to proceed...";
+	            read
 	            ;;
 	        4)
 	            echo "	Stop Service"
 	            __StopSAD
-
+	    		echo -n "Hit ENTER to proceed...";
+	    		read
 	            ;;
 	        5)
 	            echo "	Exit";
 	            __ExitSAD
 	            ;;
 	    esac
-	    echo -n "Hit ENTER to proceed...";
-	    read
+
 	done;
 }
 
