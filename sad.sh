@@ -5,12 +5,10 @@ VERSION="v0.0.1";
 
 # 'XXX'
 __ReadCardFromReader(){
-	# local cardId="FOO";
-
-	readFromCard=`opensc-tool -w -a 2>/dev/null`;
+	
+	readFromCard=`opensc-tool -w -a > /dev/null 2>&1 && pkcs15-tool -D | md5`;
 	echo "$readFromCard";
-	# echo "Exit status: $?";
-	# read
+
 }
 
 __RegisterCard(){
@@ -61,6 +59,10 @@ __UnregisterCard(){
 
 }
 
+__RunSAD(){
+	echo
+}
+
 __ExitSAD(){
 	exit="YES";
 }
@@ -91,6 +93,7 @@ __Menu(){
 	            ;;
 	        3)
 	            echo "	Run Service"
+	            __RunSAD
 	            ;;
 	        4)
 	            echo "	Stop Service"
