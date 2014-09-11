@@ -9,7 +9,7 @@ PIDFILE="/var/tmp/$SADSCRIPTFILENAME.pid";
 
 SADSCRIPTCODE=$'
 	#!/usr/bin/env bash
-	
+
 	echo $$ > $1
 
 	while [ 1 ]
